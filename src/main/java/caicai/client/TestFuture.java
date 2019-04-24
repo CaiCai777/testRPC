@@ -20,12 +20,14 @@ public class TestFuture implements Future<Object> {
     private long startTime;
     private long responseThresholdTime=5000;
     //存放用户添加的callBack
-    public ArrayList<AsyncCallback> pendingCallbacks=new ArrayList<AsyncCallback>();
+    private ArrayList<AsyncCallback> pendingCallbacks=new ArrayList<AsyncCallback>();
     public TestFuture(RpcRequest rpcRequest){
         this.rpcRequest=rpcRequest;
-        this.sync=new Sync();
+        this.sync=new Sync();//一个对象一个锁，其实就是一个可以自定义状态的锁。
         this.startTime=System.currentTimeMillis();
     }
+    //为啥在这里定义？
+
     private ReentrantLock lock=new ReentrantLock();
 
     @Override
@@ -45,7 +47,8 @@ public class TestFuture implements Future<Object> {
 //同步阻塞获得future的结果
     @Override
     public Object get() throws InterruptedException, ExecutionException {
-       sync.acquire(-1);
+        //阻塞试图获取锁，如果锁被释放才能获取锁，别的线程释放后会通知
+       sync.acquire(-1);//获取不到的话就进入等待队列中
        if(this.rpcResponse!=null)
            return rpcResponse.getResult();
        else {//acquire 线程可能在阻塞过程中被中断而释放，因此不一定可以得到结果
@@ -69,11 +72,14 @@ public class TestFuture implements Future<Object> {
     //运行用户定义的callBack
     private void invokeAsynCallbacks(ArrayList<AsyncCallback> callbacks){
         try {
+            //获取锁
+            //加锁原因：对callBacks的操作。
             lock.lock();
             for(AsyncCallback callback:callbacks)
                 runCallback(callback);
 
         }finally {
+            //释放锁
             lock.unlock();
         }
 
@@ -107,18 +113,20 @@ public class TestFuture implements Future<Object> {
            }
        });
     }
-
-    static class Sync extends AbstractQueuedSynchronizer{
+//静态类的作用是什么
+     class Sync extends AbstractQueuedSynchronizer{
         private static final long seriaVersionUID=1L;
         //表示状态
         private final int done=1;
         private final int pending=0;
+        //那么这个锁的最初状态是什么
         protected boolean tryAcquire(int arg) {
             if(getState()==done){
                 return true;
             }else
                 return false;
         }
+        //实现的抽象方法
         protected boolean tryRelease(int arg) {
             if(getState()==pending){
                 if(compareAndSetState(pending,done)){

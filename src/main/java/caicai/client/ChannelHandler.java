@@ -20,9 +20,11 @@ public class ChannelHandler extends ChannelInboundHandlerAdapter {
     }
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        //收到消息
         RpcResponse rpcResponse=(RpcResponse)msg;
         String requestId=((RpcResponse) msg).getRequestId();
         if(futureMap.containsKey(requestId))
+            //future将结果放入，并进行释放锁
             futureMap.get(requestId).done(rpcResponse);
 
 
@@ -49,6 +51,7 @@ public class ChannelHandler extends ChannelInboundHandlerAdapter {
 
        });
        try {
+           //线程阻塞
            countDownLatch.await();
        }catch (InterruptedException e){
            e.printStackTrace();

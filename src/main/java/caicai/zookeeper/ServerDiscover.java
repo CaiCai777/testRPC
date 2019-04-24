@@ -45,9 +45,11 @@ public class ServerDiscover {
     private ZooKeeper connectZookeeper(){
         ZooKeeper zk=null;
         try {
-            zk=new ZooKeeper(ZK_Constant.REGISTRY_PATH, ZK_Constant.SESSION_TIMEOUT, new Watcher() {
+            zk=new ZooKeeper(registryAddress, ZK_Constant.SESSION_TIMEOUT, new Watcher() {
                 @Override
                 public void process(WatchedEvent event) {
+
+                    if(event.getState()==Event.KeeperState.SyncConnected)
                     countDownLatch.countDown();
                 }
             });
@@ -82,7 +84,7 @@ public class ServerDiscover {
                 });
                 String childPath;
                 for (String nodePath:pathList){
-                    childPath=ZK_Constant.DATA_PATH+"/"+nodePath;
+                    childPath=ZK_Constant.REGISTRY_PATH+"/"+nodePath;
                    String childData =new String(zooKeeper.getData(childPath,false,null));
                    dList.add(childData);
                 }

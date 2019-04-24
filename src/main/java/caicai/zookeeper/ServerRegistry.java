@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 
 public class ServerRegistry {
+    //服务器注册节点的时候是不用监听的，客户端发现服务的时候才要监听
     private Logger logger= LoggerFactory.getLogger(ServerRegistry.class);
     public ZooKeeper zooKeeper;
     private String registryAddress;

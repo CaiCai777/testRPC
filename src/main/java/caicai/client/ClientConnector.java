@@ -27,10 +27,10 @@ public class ClientConnector {
 
     public ChannelHandler getChannelHandler()throws InterruptedException {
         try {
-            lock.lock();
+            lock.lock();//获得锁
             if (channelHandler == null) {
                 //等待连接线程连接成功将此线程唤醒。
-                condition.await();
+                condition.await();//在condition这个队列排队等着
             }
             return channelHandler;
         } finally {

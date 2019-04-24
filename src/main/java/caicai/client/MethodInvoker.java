@@ -7,6 +7,7 @@ import java.lang.reflect.Method;
 import java.util.UUID;
 
 public class MethodInvoker extends AbstractInvocationHandler {
+    //使用了模板方法。
     @Override
     protected Object handleInvocation(Object proxy, Method method, Object[] args) throws Throwable {
         RpcRequest request=new RpcRequest();
