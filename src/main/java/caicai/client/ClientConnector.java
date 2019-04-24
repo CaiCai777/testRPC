@@ -1,6 +1,8 @@
 package caicai.client;
 
 
+import caicai.zookeeper.loadBalance.LoadBalanceStrategy;
+import caicai.zookeeper.loadBalance.RandomSelectStrategy;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
@@ -11,6 +13,7 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import jdk.internal.dynalink.beans.StaticClass;
 import org.apache.commons.collections4.bag.SynchronizedBag;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Condition;
@@ -18,6 +21,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class ClientConnector {
    // private ServerBootstrap serverBootstrap;
+    private LoadBalanceStrategy loadBalanceStrategy;
     private Bootstrap bootstrap;
     private String serverAddress;
     private EventLoopGroup worker;
@@ -55,6 +59,7 @@ public class ClientConnector {
    // public static volatile Map<String,Object> handlerMap=new ConcurrentHashMap<~>();
     private  static ClientConnector instance;
     private ClientConnector(){
+        loadBalanceStrategy=new RandomSelectStrategy();
 
     }
     public static  ClientConnector getInstance(){
@@ -67,13 +72,19 @@ public class ClientConnector {
         }
         return instance;
     }
-    public void connectServer() {
+    public void connect(List<String> addresses){
+        String address=loadBalanceStrategy.selectAddress(addresses);
+        connectServer(address);
+    }
+
+    public void connectServer(String serverAddress) {
         bootstrap=new Bootstrap();
         worker=new NioEventLoopGroup();
         bootstrap.group(worker)
                 .channel(NioSocketChannel.class).handler(new SendChannelInitializer());
-        String ip="127.0.0.1";
-        int port=18866;
+        String data[]=serverAddress.split(":");
+        String ip=data[0];
+        int port=Integer.parseInt(data[1]);
         ChannelFuture future = bootstrap.connect(ip,port);
         //future.channel().closeFuture().sync();
         future.addListener(new ChannelFutureListener() {

@@ -6,10 +6,7 @@ import caicai.model.RpcRequest;
 import caicai.model.RpcResponse;
 
 import java.util.ArrayList;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 import java.util.concurrent.locks.AbstractQueuedSynchronizer;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -23,12 +20,12 @@ public class TestFuture implements Future<Object> {
     private ArrayList<AsyncCallback> pendingCallbacks=new ArrayList<AsyncCallback>();
     public TestFuture(RpcRequest rpcRequest){
         this.rpcRequest=rpcRequest;
-        this.sync=new Sync();//一个对象一个锁，其实就是一个可以自定义状态的锁。
+        this.sync=new Sync();
         this.startTime=System.currentTimeMillis();
     }
-    //为啥在这里定义？
 
     private ReentrantLock lock=new ReentrantLock();
+    private CountDownLatch countDownLatch=new CountDownLatch(1);
 
     @Override
     public boolean cancel(boolean mayInterruptIfRunning) {
@@ -39,16 +36,18 @@ public class TestFuture implements Future<Object> {
     public boolean isCancelled() {
      throw new UnsupportedOperationException();
     }
-//判断future是否有结果
+    //判断future是否有结果
     @Override
     public boolean isDone() {
-        return sync.isDone();
+       // return sync.isDone();
+        return rpcResponse==null?false:true;
     }
-//同步阻塞获得future的结果
+    //同步阻塞获得future的结果
     @Override
     public Object get() throws InterruptedException, ExecutionException {
         //阻塞试图获取锁，如果锁被释放才能获取锁，别的线程释放后会通知
-       sync.acquire(-1);//获取不到的话就进入等待队列中
+       //sync.acquire(-1);//获取不到的话就进入等待队列中
+        countDownLatch.await();
        if(this.rpcResponse!=null)
            return rpcResponse.getResult();
        else {//acquire 线程可能在阻塞过程中被中断而释放，因此不一定可以得到结果
@@ -64,7 +63,8 @@ public class TestFuture implements Future<Object> {
     }
     public void done(RpcResponse response){
         this.rpcResponse=response;
-        sync.release(1);//等待线程不再阻塞
+        countDownLatch.countDown();
+        //sync.release(1);//等待线程不再阻塞
         //已经成功得到result，可以运行用户定义的callback
         invokeAsynCallbacks(pendingCallbacks);
 

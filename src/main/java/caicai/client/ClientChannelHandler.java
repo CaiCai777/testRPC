@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.CountDownLatch;
+//test Handler
 
 public class ClientChannelHandler extends SimpleChannelInboundHandler<RpcResponse> {
     private volatile Channel channel;

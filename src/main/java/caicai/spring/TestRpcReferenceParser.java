@@ -35,15 +35,14 @@ public class TestRpcReferenceParser implements BeanDefinitionParser {
     public BeanDefinition parse(Element element, ParserContext parserContext) {
         String interfaceName = element.getAttribute("interfaceName");
         String id = element.getAttribute("id");
-       // String ipAddr = element.getAttribute("ipAddr");
-        //String protocolType = element.getAttribute("protocol");
+
 
         RootBeanDefinition beanDefinition = new RootBeanDefinition();
         beanDefinition.setBeanClass(TestRpcReference.class);
         beanDefinition.setLazyInit(false);
 
         beanDefinition.getPropertyValues().addPropertyValue("interfaceName", interfaceName);
-        //beanDefinition.getPropertyValues().addPropertyValue("ipAddr", ipAddr);
+
 
 
         parserContext.getRegistry().registerBeanDefinition(id, beanDefinition);

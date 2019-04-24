@@ -18,6 +18,7 @@ package caicai.spring;
 import caicai.client.ClientConnector;
 import caicai.client.RpcClient;
 
+import caicai.zookeeper.curator.CuratorRegistry;
 import com.google.common.eventbus.EventBus;
 
 import org.springframework.beans.factory.DisposableBean;
@@ -60,7 +61,8 @@ public class TestRpcReference implements FactoryBean, InitializingBean, Disposab
     @Override
     public void afterPropertiesSet() throws Exception {
         //在这里连接服务器
-        ClientConnector.getInstance().connectServer();
+        CuratorRegistry registry=new CuratorRegistry("127.0.0.1:2181");
+        registry.subcribe();
        // ClientStopEventListener listener = new ClientStopEventListener();
        // eventBus.register(listener);
     }
@@ -70,6 +72,7 @@ public class TestRpcReference implements FactoryBean, InitializingBean, Disposab
         //连接服务器以后获取对象实例
 
         return RpcClient.createProxy(getObjectType());
+
     }
 
     /***

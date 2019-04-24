@@ -8,6 +8,7 @@ import caicai.model.RpcResponse;
 import caicai.protocol.RpcDecoder;
 import caicai.protocol.RpcEncoder;
 import caicai.spring.RpcService;
+import caicai.zookeeper.curator.CuratorRegistry;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -85,8 +86,11 @@ public class RpcServer implements InitializingBean, ApplicationContextAware {
           }
     }
     public void start()throws Exception {
+        CuratorRegistry curatorRegistry1=new CuratorRegistry("127.0.0.1:2181");
+        curatorRegistry1.register(serverAddress);
 
         if (boss == null && worker == null) {
+
 
             boss = new NioEventLoopGroup();
             worker = new NioEventLoopGroup();
